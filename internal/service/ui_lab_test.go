@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -20,9 +22,23 @@ func TestUIFixtureHarness(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	server := &http.Server{Handler: a.Handler()}
+	done := make(chan struct{})
+	var once sync.Once
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /__test__/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+		once.Do(func() { close(done) })
+	})
+	mux.Handle("/", a.Handler())
+	server := &http.Server{Handler: mux}
 	go server.Serve(listener)
 	defer server.Close()
 	t.Log("Controlled fixture UI: http://127.0.0.1:18081 (test data only)")
-	time.Sleep(10 * time.Minute)
+	select {
+	case <-done:
+	case <-time.After(10 * time.Minute):
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = server.Shutdown(ctx)
 }

@@ -42,13 +42,46 @@ function renderInspector(){
   const details=node('details');details.append(node('summary','','独立 Cookie、API Key 与脚本授权'));const form=node('form');const fields={};[['cookie','Cookie'],['api_key','目标站点 API Key'],['api_key_header','API Key 请求头名称']].forEach(([key,label])=>{const l=node('label','',label),input=node('input');input.type=key==='api_key_header'?'text':'password';input.autocomplete='off';input.placeholder=configuration.scrapers[e.id]?.[key]?'已保存；留空保持':'尚未设置';l.append(input);form.append(l);fields[key]=input;});const consent=node('label','check-label'),checkbox=node('input');checkbox.type='checkbox';checkbox.checked=!!configuration.scrapers[e.id]?.script_approved;consent.append(checkbox,document.createTextNode('允许执行本规则中已审核的可信脚本'));form.append(consent);const save=node('button','secondary','保存刮削器设置');save.type='submit';form.append(save);form.addEventListener('submit',event=>{event.preventDefault();const payload={script_approved:checkbox.checked};Object.entries(fields).forEach(([k,input])=>{if(input.value)payload[k]=input.value;});mutate(()=>api(`/api/scrapers/${encodeURIComponent(e.id)}`,{method:'PATCH',body:JSON.stringify(payload)}),'独立设置已保存；新增 Python 依赖需要新快照安装');});details.append(form);box.append(details);
 }
 function renderDebugOptions(){const select=$('#debug-scraper'),old=select.value;select.replaceChildren();scrapers.filter(e=>e.operations.length).forEach(e=>{const o=node('option','',`${e.name} · ${stateNames[e.state]}`);o.value=e.id;select.append(o);});if(scrapers.some(e=>e.id===old))select.value=old;else if(selected)select.value=selected;updateDebugCapability();}
-function updateDebugCapability(){const e=scrapers.find(e=>e.id===$('#debug-scraper').value),obj=$('#debug-object').value;const ops=(e?.operations||[]).filter(op=>op.object===obj);$('#debug-capability').textContent=ops.length?ops.map(op=>`${operationNames[op.operation]}：${stateNames[op.state]}`).join('　/　'):'本规则没有此对象的操作。';const mode=$('#debug-mode').value;$('#input-label').textContent=mode==='query'?'搜索词':mode==='url'?'来源 URL':'Fragment JSON';$('#debug-input').placeholder=mode==='query'?'输入名称或代码（需要规则原生支持名称搜索）':mode==='url'?'https://目标站点/详情地址':'{"url":"https://…"}';}
+const debugModes=[['query','name','按名称搜索'],['url','url','按来源 URL'],['fragment','fragment','按 Fragment'],['query_fragment','query_fragment','按搜索候选 Fragment']];
+let debugSelectionKey='';
+function debugSelection(){
+  const entry=scrapers.find(e=>e.id===$('#debug-scraper').value);
+  const operation=debugModes.find(([value])=>value===$('#debug-mode').value)?.[1];
+  const capabilities=(entry?.operations||[]).filter(op=>op.object===$('#debug-object').value&&op.operation===operation);
+  return {entry,capabilities,ready:!!entry?.enabled&&capabilities.some(op=>op.state==='available')};
+}
+function updateDebugCapability(){
+  const entry=scrapers.find(e=>e.id===$('#debug-scraper').value),object=$('#debug-object'),modeSelect=$('#debug-mode');
+  [...object.options].forEach(option=>option.disabled=!(entry?.operations||[]).some(op=>op.object===option.value));
+  if(![...object.options].some(option=>option.value===object.value&&!option.disabled))object.value=[...object.options].find(option=>!option.disabled)?.value||'';
+  const ops=(entry?.operations||[]).filter(op=>op.object===object.value),previousMode=modeSelect.value;
+  modeSelect.replaceChildren();
+  debugModes.forEach(([value,operation,label])=>{
+    const capabilities=ops.filter(op=>op.operation===operation);if(!capabilities.length)return;
+    const available=capabilities.some(op=>op.state==='available'),option=node('option','',available?label:`${label} · ${stateNames[capabilities[0].state]}`);
+    option.value=value;option.disabled=!available;modeSelect.append(option);
+  });
+  const choices=[...modeSelect.options];
+  modeSelect.value=choices.find(option=>option.value===previousMode&&!option.disabled)?.value||choices.find(option=>!option.disabled)?.value||choices[0]?.value||'';
+  modeSelect.disabled=!choices.some(option=>!option.disabled);
+  const mode=modeSelect.value,selection=debugSelection();
+  const messages=ops.map(op=>`${operationNames[op.operation]}：${stateNames[op.state]}`);
+  if(!ops.some(op=>op.operation==='name')&&ops.some(op=>op.operation==='url'))messages.push('本规则不支持按名称或番号搜索，请填写本站详情页 URL。');
+  if(entry&&!entry.enabled)messages.push('本刮削器已停用，请先在管理页启用。');
+  if(!selection.ready&&selection.capabilities.length)messages.push(selection.capabilities[0].reason||'请先补全此操作的运行依赖或配置。');
+  $('#debug-capability').textContent=messages.join('　/　')||'本规则没有可执行的操作。';
+  $('#run').disabled=!!abortController||!selection.ready;
+  $('#input-label').textContent=mode==='query'?'搜索词':mode==='url'?'来源 URL':'Fragment JSON';
+  $('#debug-input').placeholder=mode==='query'?'输入名称或代码（需要规则原生支持名称搜索）':mode==='url'?'https://目标站点/详情地址':'{"url":"https://…"}';
+  const key=`${entry?.id}|${object.value}|${mode}`;
+  if(key!==debugSelectionKey)$('#debug-input').value='';debugSelectionKey=key;
+}
 ['debug-scraper','debug-object','debug-mode'].forEach(id=>$(`#${id}`).addEventListener('change',updateDebugCapability));
 async function execute(payload,search){
   abortController=new AbortController();$('#run').disabled=true;$('#cancel').disabled=false;$('#result-count').textContent='请求运行中';$('#results').replaceChildren(node('p','help','正在发起真实请求，请稍候…'));
   try{const response=await api(search?'/api/search':'/api/detail',{method:'POST',body:JSON.stringify(payload),signal:abortController.signal});$('#raw-result').textContent=JSON.stringify(response,null,2);$('#result-count').textContent=`${response.results.length} ${search?'个候选':'条结果'}`;renderResults(response,payload,search);}
   catch(e){$('#result-count').textContent=e.name==='AbortError'?'已取消':'执行失败';const error=node('div','result-error');error.append(node('span','error-code',e.name==='AbortError'?'cancelled':e.code||'request_error'),document.createTextNode(e.name==='AbortError'?'请求已取消。':e.message));$('#results').replaceChildren(error);$('#raw-result').textContent=JSON.stringify(e.response||{error:e.message},null,2);}
-  finally{$('#run').disabled=false;$('#cancel').disabled=true;abortController=null;}
+  finally{$('#cancel').disabled=true;abortController=null;updateDebugCapability();}
 }
 function renderResults(response,payload,search){
   const container=$('#results');container.replaceChildren();response.results.forEach((r,index)=>{const item=node('article','result');item.append(node('h3','',r.title||r.name||`结果 ${index+1}`));if(r.code||r.date)item.append(node('p','',[r.code,r.date].filter(Boolean).join(' · ')));if(r.details)item.append(node('p','',r.details));if(r.studio)item.append(node('p','',`制作商：${r.studio.name||JSON.stringify(r.studio)}`));if(r.performers?.length)item.append(node('p','',`演员：${r.performers.map(x=>x.name||'').join('、')}`));if(r.tags?.length)item.append(node('p','',`标签：${r.tags.map(x=>x.name).join('、')}`));r.urls.forEach(url=>item.append(node('div','source-url',url)));item.append(node('p','help',`规则 ${short(r.rules_version)} · ${r.scraper_id}`));
@@ -56,7 +89,18 @@ function renderResults(response,payload,search){
     const detail=node('details');detail.append(node('summary','','原始结果'),node('pre','',JSON.stringify(r.raw,null,2)));item.append(detail);container.append(item);
   });
 }
-$('#debug-form').addEventListener('submit',event=>{event.preventDefault();const mode=$('#debug-mode').value,payload={scraper_id:$('#debug-scraper').value,object:$('#debug-object').value};try{if(mode==='query')payload.query=$('#debug-input').value;else if(mode==='url')payload.url=$('#debug-input').value.trim();else payload.fragment=JSON.parse($('#debug-input').value);execute(payload,mode==='query');}catch(e){toast('Fragment 必须是有效 JSON 对象。');}});
+$('#debug-form').addEventListener('submit',event=>{
+  event.preventDefault();if(abortController)return;
+  if(!debugSelection().ready){toast('请选择依赖齐全且已启用的操作。');return;}
+  const mode=$('#debug-mode').value,payload={scraper_id:$('#debug-scraper').value,object:$('#debug-object').value};
+  if(mode==='query')payload.query=$('#debug-input').value;
+  else if(mode==='url'){
+    const value=$('#debug-input').value.trim();try{const url=new URL(value);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{toast('此操作需要完整的 HTTP(S) 详情页 URL，不能填写名称或番号。');return;}payload.url=value;
+  }else{
+    try{payload.fragment=JSON.parse($('#debug-input').value);if(!payload.fragment||Array.isArray(payload.fragment)||typeof payload.fragment!=='object'||!Object.keys(payload.fragment).length)throw new Error();}catch{toast('Fragment 必须是非空 JSON 对象。');return;}payload.operation=mode;
+  }
+  execute(payload,mode==='query');
+});
 $('#cancel').addEventListener('click',()=>abortController?.abort());
 function renderUpdates(){
   const {state:s,schedule:c,retained}=updates;$('#update-stage').textContent=phaseNames[s.phase]||s.phase;$('#update-explanation').textContent=s.failure||`下次检测：${date(s.next_check)}（${c.timezone}）`;$('#pause-updates').textContent=c.enabled?'暂停更新':'恢复每日跟随';$('#pin-version').value=c.pin||'';

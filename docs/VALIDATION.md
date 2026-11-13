@@ -73,6 +73,8 @@ conda run -n stashscrapers python tools/build.py
 
 ## 浏览器端到端检查
 
+能力选项修复的浏览器回归：1Pondo 的 URL-only 能力不再出现名称搜索选项；将 `ipx-177` 填入 URL 框会在前端提示完整 HTTP(S) URL；受控 1Pondo URL 返回实际解析结果。Anime-DB 在缺少 CDP 时禁用执行；Boobpedia 自动选择 performer 对象；AdultEmpire 名称搜索返回两条候选，手动选择第二条后正确取得详情。以上使用独立临时 fixture 服务，不代表对这些站点进行在线兼容验证。测试结束后临时 HTTP 服务关闭，本地生产服务保持停止。
+
 实际打开内嵌页面，检查真实 API 展示、按名称过滤、规则详情与能力、更新历史、暂停/恢复每日更新。另在明确的测试 fixture HTTP 服务中完成「搜索 → 两条候选 → 手动选择第二条 → 详情与原始 JSON」。测试服务没有链接到生产启动命令，也不替代生产页面数据。
 
 检查了 `1440 × 900` 与 `390 × 844`，移动端未发现横向溢出，浏览器未记录 JavaScript 控制台错误。截图为真实运行页面：

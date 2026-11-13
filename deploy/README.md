@@ -158,6 +158,7 @@ docker compose start scrapers
 - **GHCR `denied`**：确认镜像已经构建成功且包可见性为 public。仓库公开不会自动让 GHCR 包公开；首次发布后包所有者需要单独设置可见性，此行为依据 [GitHub 官方包权限文档](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility)。私有镜像才需要额外登录凭据，公共部署无需它们。
 - **网页无法打开**：默认只绑定回环地址，使用 SSH 隧道或反向代理；不要把 VPS 上的 `127.0.0.1` 当成自己电脑的地址。
 - **401**：在页面填写 `.env` 中的服务 Token。服务 Token 与目标站点 API Key 不同。
+- **`unsupported`：operation or URL is not supported by this rule**：所选规则没有该对象/操作，或填写的 URL 不匹配规则域名。比如 10Musume 不提供名称搜索，不能用它直接搜索 `ipx-177`；应使用该规则对应站点的详情页 URL。修复后的界面按实际能力显示操作，缺依赖或已停用时禁用执行；旧镜像请升级后刷新页面。名称搜索只表示规则有搜索入口，不保证能搜索任何站点的作品或番号。
 - **`cross-origin administration is forbidden` / HTTP 403**：请求在执行刮削器前被来源检查拒绝。确认反代传给后端的 `Host` 与页面域名及端口一致，按第 4 节设置 `proxy_set_header Host $http_host;`。仅设置 `X-Forwarded-Host` 或 `X-Forwarded-Proto` 不会替代 Host 校验；不要删除 Origin 请求头或关闭保护。Go 受控 TLS 反代回归验证了保留域名和非默认端口时通过、改写 Host 或外域来源时拒绝；这不代表已经检查用户 VPS 的实际配置。
 - **规则未下载 / ready=false**：在页面查看更新阶段；检查 VPS 到 GitHub/codeload 的网络，恢复后立即检查。安装成功后的规则加载不依赖 GitHub 在线。
 - **目标站点网络错误 / 403**：检查目标站点需要的代理、Cookie 或 API Key。这不触发全局规则回滚。
