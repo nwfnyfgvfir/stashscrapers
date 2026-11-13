@@ -140,16 +140,20 @@ conda run -n stashscrapers python tools/api.py check
 - `.github/workflows/deploy.yml` 在成功发布流程后执行可选部署。配置具有 `stashscrapers-deploy` 标签的自托管 runner、项目 Conda 环境、Docker 权限、`DEPLOY_COMPOSE` 的部署文件绝对路径，以及 `ENABLE_ENGINE_DEPLOY=true`。`tools/deploy.py` 拉取镜像、重建服务、检查健康，失败恢复旧镜像；数据 volume 始终保留。
 - Windows 用户可用发布的独立二进制在现有进程管理器中替换并重启；不自动安装 Windows 系统服务或修改系统设置。
 
+本项目的公开仓库已设置 `AUTO_RELEASE_ENGINE=true`。[首次实际引擎检查](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43384734225)成功读取上游，确认与固定的 Stash commit 一致，因此没有生成新的引擎发布。Fork 的仓库需要单独配置变量。
+
 项目发布到 [nwfnyfgvfir/stashscrapers](https://github.com/nwfnyfgvfir/stashscrapers)。推送 `v*` 或 `engine-*` tag 后，`publish-container` 自动执行兼容测试、容器健康与持久卷 smoke，再发布多架构镜像；常规稳定版本还更新 `latest`。Actions 使用仓库的 `GITHUB_TOKEN`，无需另存个人发布 Token。首次 GHCR 包的 public 可见性需要单独核对，不随仓库自动继承。
 
-维护者发布新版本：
+维护者发布新版本（将示例版本号换成尚未使用的新版本）：
 
 ```bash
-conda run -n stashscrapers git tag -a v0.1.1 -m "Release v0.1.1"
-conda run -n stashscrapers git push origin v0.1.1
+conda run -n stashscrapers git tag -a v0.1.2 -m "Release v0.1.2"
+conda run -n stashscrapers git push origin v0.1.2
 ```
 
 不要移动已经发布的 tag；修复后发布新版本。Actions 页面记录了镜像 tag 与 digest。镜像公开不等于已部署到某台 VPS；本任务没有用户 VPS 地址或登录凭据。自托管部署 runner 仍需按前文自行配置。GitHub 的计划触发可能延迟，服务内部的规则更新不依赖 GitHub Actions。
+
+GitHub 处理 push 事件也可能延迟。本次首次提交约 11 分钟后才出现自动 CI 记录；不要因此移动或重复创建 tag。需要补跑时，在 Actions 的 `publish-container` 页面选择「Run workflow」，填写已有 tag。工作流会检出并核对该 tag 的实际 commit，不会误把当前 `main` 当作旧版源码发布。
 
 ## 验证与排障
 

@@ -4,6 +4,16 @@
 
 本页主体为最初本机交付的基线记录。后续 GitHub 发布检查以 [Actions](https://github.com/nwfnyfgvfir/stashscrapers/actions)和对应 tag 的工作流日志为准。发布版另外加入容器健康检查命令及 5 个响应场景测试；VPS 安装脚本已通过首次安装、保留凭据、非法参数和升级失败恢复测试。
 
+## GitHub 与镜像发布补充
+
+- [公开仓库](https://github.com/nwfnyfgvfir/stashscrapers)已推送；`v0.1.1` 对应 commit `94607237fc33109aa847a16d788193d5aac9bd05`。
+- [Windows / Linux 兼容 CI](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43385209462)全部通过，包含完整 Python HTTPS 集成、Linux race、多平台二进制构建及真实 Docker 持久卷重启测试。
+- [v0.1.1 发布流水线](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43385200335)已通过手动入口实际完成构建和推送。`push.tags` 自动入口也已配置；首次主分支 push 的 CI 约延迟 11 分钟后才创建，本记录不把手动运行冒充 tag 自动触发证明。
+- `ghcr.io/nwfnyfgvfir/stashscrapers:v0.1.1` 与当次 `latest` 的多架构 digest 为 `sha256:08dd67149933a39846c7347ec43cfcf483a6872708cf97e5fa29eb8197c0a279`。
+- 未提供 GitHub/GHCR 凭据的 registry 请求成功读取多架构索引、两个架构的 manifest，并通过 config 与所有 layer 的匿名 HEAD 检查。支持 `linux/amd64`、`linux/arm64`；amd64 实际运行，arm64 完成构建和发布，未在 arm64 硬件执行。
+- 发布镜像压缩 layer 合计约 amd64 **8.07 MiB**、arm64 **7.48 MiB**；这不包含首次启动下载的社区资源，也不是进程内存占用。
+- VPS 安装脚本已做受控黑盒测试；没有用户 VPS 地址或凭据，因此没有声称已在用户 VPS 执行部署。
+
 ## 版本与执行环境
 
 - Stash 执行层：`47057616fe9da0cf38cfa8c39ab160e5441eeafc`。
@@ -86,11 +96,14 @@ conda run -n stashscrapers python tools/build.py
 
 这是单机、单样本测量，运行时负载、文件系统缓存及安全软件会影响启动与内存。完整社区目录加载明显慢于空目录启动；未声称达到毫秒级完整资源启动。测量细节保存于本机 `test-output/metrics.json`。
 
-**未测量 Docker 镜像大小**：本工作站无 Docker，Dockerfile/Compose 仅完成配置与构建路径检查，未在本机执行镜像构建。CI 中提供了非 root 容器挂载持久卷的启动 smoke 和镜像大小输出，但该 CI 尚未实际运行。
+**Docker 已在 GitHub Actions 实际构建并运行**：本工作站仍未安装 Docker；远程 Linux runner 的 [容器测试日志](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43385209462/job/131751957645)确认非 root 启动、健康探针、缺少 Token 返回 401、配置写入及重启后持久卷恢复均通过。该 runner 的 `docker image inspect --format '{{.Size}}'` 返回 **8,471,479 字节，约 8.08 MiB**。这是一次 amd64 镜像的 Docker 报告值，不代表 VPS 实际磁盘占用或运行内存。容器 smoke 检查 HTTP 服务健康，不等待完整社区规则下载；规则语义由独立完整测试覆盖。
+
+首轮 `v0.1.0` 测试在重启后的主机访问失败，镜像没有发布。`v0.1.1` 修复测试脚本：Docker 重启后重新读取随机分配的主机端口，失败时输出容器日志和状态。修复后真实重启测试已通过，旧 tag 保持不变。
 
 ## 尚未实际运行与已知边界
 
-- 本机基线交付时尚未执行 GitHub CI、GHCR 推送或远程部署。后续已建立公开 GitHub 仓库并接入 tag 镜像发布，实际成功与否须查看对应 Actions 结果。没有访问或部署用户未提供的 VPS。
+- 远程 Linux 完整兼容测试、Python HTTPS 集成、race、VPS 安装脚本测试及容器 smoke 已实际通过；GHCR 发布和公开拉取以对应 [发布工作流](https://github.com/nwfnyfgvfir/stashscrapers/actions/workflows/release.yml)及匿名 registry 检查为准。没有访问或部署用户未提供的 VPS。
+- [每日引擎检查已手动实跑](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43384734225)，确认固定引擎与当前上游一致，无需提取或发布。仓库变量 `AUTO_RELEASE_ENGINE=true` 已设置；未声称模拟了未来上游引擎变更或实际 VPS 自动换版。
 - 当前只审核开放 RealJamVR 的 Python 动作。其他脚本的独立依赖/完整 Stash API 关系未全部验证，因此明确不支持。
 - `action: stash`、Stash 数据库/媒体库、`useSurf`、JSON + CDP 均不支持。没有媒体扫描、播放或转码。
 - CDP 浏览器的网络隔离与代理由其部署负责；Python 与 CDP 需明确承认独立网络边界。Python venv 回滚依赖其基础解释器继续存在。
