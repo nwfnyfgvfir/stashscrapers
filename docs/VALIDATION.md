@@ -6,6 +6,7 @@
 
 ## GitHub 与镜像发布补充
 
+- **tag 自动发布已验证**：[v0.1.2 自动运行](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43386196695)由 Git tag `push` 触发，验证和发布两个 job 均成功。对应源码 commit `9cc4617`，公开镜像 `ghcr.io/nwfnyfgvfir/stashscrapers:v0.1.2`，digest 为 `sha256:51a0962a4a5ba5eaf24e8abc11c6da6ce2baf233c1c3e258ed3f9f57cb9aa0ba`。两个架构 manifest、config 和所有 layer 均通过匿名访问检查。
 - [公开仓库](https://github.com/nwfnyfgvfir/stashscrapers)已推送；`v0.1.1` 对应 commit `94607237fc33109aa847a16d788193d5aac9bd05`。
 - [Windows / Linux 兼容 CI](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43385209462)全部通过，包含完整 Python HTTPS 集成、Linux race、多平台二进制构建及真实 Docker 持久卷重启测试。
 - [v0.1.1 发布流水线](https://github.com/nwfnyfgvfir/stashscrapers/actions/runs/43385200335)已通过手动入口实际完成构建和推送。`push.tags` 自动入口也已配置；首次主分支 push 的 CI 约延迟 11 分钟后才创建，本记录不把手动运行冒充 tag 自动触发证明。

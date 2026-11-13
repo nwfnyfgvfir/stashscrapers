@@ -29,7 +29,7 @@ curl -fsSL https://raw.githubusercontent.com/nwfnyfgvfir/stashscrapers/main/depl
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nwfnyfgvfir/stashscrapers/main/deploy/install.sh \
-  | VERSION=v0.1.1 INSTALL_DIR=/opt/stashscrapers PORT=8080 bash
+  | VERSION=v0.1.2 INSTALL_DIR=/opt/stashscrapers PORT=8080 bash
 ```
 
 `VERSION` 在首次安装时写入 `.env`。已有安装重新运行脚本时，镜像版本和端口继续使用原 `.env`；升级版本请按第 6 节修改配置。固定版本也可把下载地址中的 `main` 换成对应 tag。
@@ -105,7 +105,7 @@ docker compose pull
 docker compose up -d --no-build --wait --wait-timeout 180
 ```
 
-修改 `.env` 为 `STASHSCRAPERS_IMAGE=ghcr.io/nwfnyfgvfir/stashscrapers:v0.1.1` 可固定版本；换成其他已发布 tag 后执行同样命令即可升级或回退。也可以使用 Actions 记录的 `@sha256:...` 固定镜像 digest。`v0.1.0` 的首轮容器重启测试未通过，未发布镜像，请勿使用该版本部署。
+修改 `.env` 为 `STASHSCRAPERS_IMAGE=ghcr.io/nwfnyfgvfir/stashscrapers:v0.1.2` 可固定版本；换成其他已发布 tag 后执行同样命令即可升级或回退。也可以使用 Actions 记录的 `@sha256:...` 固定镜像 digest。`v0.1.0` 的首轮容器重启测试未通过，未发布镜像，请勿使用该版本部署。
 
 有 Caddy 时，后续 Compose 命令继续带 `-f compose.yml -f compose.caddy.yml`。一键脚本具备失败恢复；直接手动执行 Compose 的升级失败时，请将 `.env` 改回上一个可用版本再 `up -d --wait`。
 
