@@ -1,0 +1,28 @@
+{
+  "listen": "127.0.0.1:8080",
+  "source": {
+    "repository": "stashapp/CommunityScrapers",
+    "branch": "",
+    "api_base": "https://api.github.com",
+    "archive_base": "https://codeload.github.com"
+  },
+  "update": {
+    "enabled": true,
+    "interval_hours": 24,
+    "timezone": "Asia/Shanghai",
+    "daily_at": "",
+    "retain": 3,
+    "pin": "",
+    "pin_until": "0001-01-01T00:00:00Z"
+  },
+  "local_dir": "",
+  "proxy": "",
+  "python_base": "",
+  "cdp": "",
+  "timeout_seconds": 30,
+  "concurrency": 4,
+  "site_interval_ms": 1000,
+  "allow_private_targets": false,
+  "auto_enable_native": true,
+  "scrapers": {}
+}

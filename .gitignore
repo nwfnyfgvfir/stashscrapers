@@ -1,0 +1,13 @@
+/.upstream/
+/data/
+/bin/
+/dist/
+/test-output/
+*.log
+__pycache__/
+.DS_Store
+/.env
+/deploy/.env
+.env.*
+!.env.example
+!deploy/.env.example

@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/stashapp/stash",
+  "commit": "47057616fe9da0cf38cfa8c39ab160e5441eeafc",
+  "license": "AGPL-3.0",
+  "files_sha256": {
+    "definition.go": "eed3225c71ecfa92d69bffeabb4a881de625ecf9773421cb2e6d7b0963c21351",
+    "mapped.go": "57a6f2978ee9b106c2280ea2bcd4a86516e59a6266ead6f28a1a8a74cb9b7905",
+    "mapped_config.go": "c9ab1100f8c9da07706eaa9baece67998dfaa9dbadf417068acbc220c559c88b",
+    "mapped_result.go": "b1c3be6fd973f624e9fe8d4dbd5aa4efa2d7b3f4397855fa5dfc74e9b683b76c",
+    "mapped_postprocessing.go": "cb6194aac0d9a9bdce5f01cdd9cec375294f4f0ec1f599c2281ba86853e016c0",
+    "xpath.go": "ec4381fbb9b60b3874d918ea38e39f11f521254b74022be40869a5612b7d654d",
+    "json.go": "753c7649bc967e96c32e9ec99d5d6191acd1fd695add57f4ab35e3642c01be28"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/stashapp/CommunityScrapers",
+  "commit": "da55cf6ee5ff12b4b6bc33b05e306d1fbe550d6b",
+  "license": "AGPL-3.0",
+  "fixtures_sha256": {
+    "AdultEmpire.yml": "a84da435abf6d521a04eff268844bc9faa6e8a0aa7c186aedd83afdfc8b42ec0",
+    "1pondo.yml": "934b5d43e86e873cf58369e4ffeb530d9bd457e6169ec7488258bd3912de1685",
+    "Boobpedia.yml": "2f173977c82a3ed4f435b3e968e384fd44fbcaf6b49ec39abf00b4ebd44cd5ab",
+    "Anime-DB.yml": "64f18f60cfd8bbaa6cee480038fe0a7c6b432f0705257cecbc44bef81a45c28c",
+    "RealjamVR/RealjamVR.yml": "f2f36eec62d6e548aa94c88f0c095c79a811853f05d3bd99dbde9b6fc98da2e3",
+    "RealjamVR/RealJamVR.py": "a4d2bc6c59c52093a734cce210672665d1c7d7f6dfbdf54e94c6af30ecb64778",
+    "py_common/util.py": "82685eb3b169f8a42d5a4565bcebfeda363da287edfd0e311a69eb2a61b630bc",
+    "py_common/types.py": "73665339650b271e984eba12c5dec98040580df569d6a7f25f0b78a320cbebdf",
+    "py_common/log.py": "8a6880069f48a894e5a165c82cbd3df3908f47e5f99a0837a53824cb9866f517"
+  }
+}

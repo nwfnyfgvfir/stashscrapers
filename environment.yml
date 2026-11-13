@@ -1,0 +1,8 @@
+name: stashscrapers
+channels:
+  - conda-forge
+dependencies:
+  - go=1.25
+  - python=3.12
+  - git
+  - pip

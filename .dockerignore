@@ -1,0 +1,12 @@
+.git
+.upstream
+data
+dist
+bin
+test-output
+*.log
+**/__pycache__
+.env
+**/.env
+**/.env.*
+!deploy/.env.example

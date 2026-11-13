@@ -1,0 +1,25 @@
+name: stashscrapers
+
+services:
+  scrapers:
+    image: ${STASHSCRAPERS_IMAGE:-ghcr.io/nwfnyfgvfir/stashscrapers:latest}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8080}:8080"
+    environment:
+      STASHSCRAPERS_DATA: /data
+      STASHSCRAPERS_LISTEN: 0.0.0.0:8080
+      STASHSCRAPERS_TOKEN: ${STASHSCRAPERS_TOKEN:?Set STASHSCRAPERS_TOKEN in .env before starting}
+    volumes:
+      - data:/data
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  data:
+    name: stashscrapers-data

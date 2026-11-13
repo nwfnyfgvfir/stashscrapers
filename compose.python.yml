@@ -1,0 +1,4 @@
+services:
+  scrapers:
+    build:
+      target: python-runtime

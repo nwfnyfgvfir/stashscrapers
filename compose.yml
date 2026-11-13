@@ -1,0 +1,18 @@
+services:
+  scrapers:
+    image: ${STASHSCRAPERS_IMAGE:-stashscrapers:local}
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - scraper-data:/data
+    environment:
+      STASHSCRAPERS_DATA: /data
+      STASHSCRAPERS_TOKEN: ${STASHSCRAPERS_TOKEN:-}
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+volumes:
+  scraper-data:
