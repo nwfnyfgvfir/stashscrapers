@@ -6,14 +6,18 @@ import urllib.request
 import uuid
 import urllib.error
 name='stashscrapers-smoke-'+uuid.uuid4().hex[:8];volume=name+'-data'
+def endpoint():
+    port=subprocess.check_output(['docker','port',name,'8080/tcp'],text=True).strip().split(':')[-1]
+    return 'http://127.0.0.1:'+port
+
 try:
     subprocess.run(['docker','volume','create',volume],check=True)
     subprocess.run(['docker','run','-d','--name',name,'-v',volume+':/data','-e','STASHSCRAPERS_TOKEN=container-smoke-fixture-token','-p','127.0.0.1::8080','stashscrapers:ci'],check=True)
-    port=subprocess.check_output(['docker','port',name,'8080/tcp'],text=True).strip().split(':')[-1]
+    base=endpoint()
     deadline=time.monotonic()+45
     while True:
         try:
-            with urllib.request.urlopen('http://127.0.0.1:'+port+'/api/health',timeout=2) as r:health=json.load(r)
+            with urllib.request.urlopen(base+'/api/health',timeout=2) as r:health=json.load(r)
             assert health['status']=='ok';break
         except Exception:
             if time.monotonic()>deadline:raise
@@ -21,7 +25,6 @@ try:
     subprocess.run(['docker','exec',name,'/stashscrapers','--healthcheck'],check=True)
     user=subprocess.check_output(['docker','inspect',name,'--format','{{.Config.User}}'],text=True).strip()
     assert user not in {'','0','root','0:0'},'Container is running as root'
-    base='http://127.0.0.1:'+port
     try:urllib.request.urlopen(base+'/api/config');raise AssertionError('Missing service token was accepted')
     except urllib.error.HTTPError as error:assert error.code==401
     headers={'Authorization':'Bearer container-smoke-fixture-token','Content-Type':'application/json'}
@@ -30,6 +33,8 @@ try:
     request=urllib.request.Request(base+'/api/config',headers=headers,data=json.dumps(settings).encode(),method='PUT')
     with urllib.request.urlopen(request) as response:assert response.status==200
     subprocess.run(['docker','restart',name],check=True)
+    # An unspecified host port may be allocated again when Docker restarts it.
+    base=endpoint()
     deadline=time.monotonic()+45
     while True:
         try:
@@ -38,8 +43,13 @@ try:
         except (OSError,urllib.error.URLError):
             if time.monotonic()>deadline:raise
             time.sleep(.25)
+    subprocess.run(['docker','exec',name,'/stashscrapers','--healthcheck'],check=True)
     print('Non-root container, health CLI, authentication and persistent-volume restart passed')
     print(json.dumps(health));print(subprocess.check_output(['docker','image','inspect','stashscrapers:ci','--format','{{.Size}}'],text=True).strip()+' image bytes')
+except Exception:
+    subprocess.run(['docker','logs','--tail','80',name],check=False)
+    subprocess.run(['docker','inspect',name,'--format','{{json .State}}'],check=False)
+    raise
 finally:
     subprocess.run(['docker','rm','-f',name],check=False)
     subprocess.run(['docker','volume','rm',volume],check=False)
