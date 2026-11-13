@@ -56,7 +56,22 @@ grep '^STASHSCRAPERS_TOKEN=' "$HOME/stashscrapers/.env"
 
 ## 4. 使用域名与自动 HTTPS
 
-已有 Nginx/Caddy 等反向代理时，转发到 `127.0.0.1:8080` 并保留 `Host` 请求头即可。需要使用本仓库的可选 Caddy 配置时：
+已有 Nginx/Caddy 等反向代理时，转发到服务并保留 `Host` 请求头。下面分别说明已有反代的设置，以及本仓库的可选 Caddy 配置。
+
+### 已有 Nginx、OpenResty 或面板反代
+
+在当前站点**已有的代理 `location`** 中设置以下请求头，保留现有的 `proxy_pass` 上游地址：
+
+```nginx
+proxy_set_header Host $http_host;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+将原有的 `proxy_set_header Host ...;` 替换为上面这行，不要重复追加。`$http_host` 保留浏览器发来的域名及非默认端口；不要改成上游地址 `127.0.0.1:8080`、`scrapers:8080` 或 `$proxy_host`。若反代运行于容器中，继续使用当前可达的上游地址，容器内的 `127.0.0.1` 不代表 VPS 宿主机。
+
+保存后，在面板执行配置检查并重新加载；原生 Nginx 可执行 `nginx -t && nginx -s reload`。本次修改只涉及反代，不需要升级刮削服务镜像。Nginx 默认重写 Host 和透传原 Host 的行为依据 [Nginx 官方 proxy_set_header 文档](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header)；浏览器 Origin 包含协议、主机名与端口，见 [MDN Origin 文档](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Origin)。
+
+### 使用本仓库的 Caddy 配置
 
 1. 将域名 A/AAAA 记录指向 VPS。
 2. 确认 80/443 端口可用并能从公网访问。
@@ -143,6 +158,7 @@ docker compose start scrapers
 - **GHCR `denied`**：确认镜像已经构建成功且包可见性为 public。仓库公开不会自动让 GHCR 包公开；首次发布后包所有者需要单独设置可见性，此行为依据 [GitHub 官方包权限文档](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility)。私有镜像才需要额外登录凭据，公共部署无需它们。
 - **网页无法打开**：默认只绑定回环地址，使用 SSH 隧道或反向代理；不要把 VPS 上的 `127.0.0.1` 当成自己电脑的地址。
 - **401**：在页面填写 `.env` 中的服务 Token。服务 Token 与目标站点 API Key 不同。
+- **`cross-origin administration is forbidden` / HTTP 403**：请求在执行刮削器前被来源检查拒绝。确认反代传给后端的 `Host` 与页面域名及端口一致，按第 4 节设置 `proxy_set_header Host $http_host;`。仅设置 `X-Forwarded-Host` 或 `X-Forwarded-Proto` 不会替代 Host 校验；不要删除 Origin 请求头或关闭保护。Go 受控 TLS 反代回归验证了保留域名和非默认端口时通过、改写 Host 或外域来源时拒绝；这不代表已经检查用户 VPS 的实际配置。
 - **规则未下载 / ready=false**：在页面查看更新阶段；检查 VPS 到 GitHub/codeload 的网络，恢复后立即检查。安装成功后的规则加载不依赖 GitHub 在线。
 - **目标站点网络错误 / 403**：检查目标站点需要的代理、Cookie 或 API Key。这不触发全局规则回滚。
 - **Python/CDP 缺失**：默认镜像不含它们。Python 可使用源码 Dockerfile 的 `python-runtime` 目标自行构建；基础解释器路径见根 README。CDP 配置外部浏览器端点。只有明确审核并授权的脚本才执行。
