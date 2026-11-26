@@ -1,4 +1,4 @@
-// Derived from stashapp/stash fa96d925c2e3db86859d04995b51cf7cda473d34, pkg/scraper/xpath.go.
+// Derived from stashapp/stash 4d6ab70ae453bf14f5f4ab103b829ec03b57d927, pkg/scraper/xpath.go.
 // SPDX-License-Identifier: AGPL-3.0-only
 package engine
 

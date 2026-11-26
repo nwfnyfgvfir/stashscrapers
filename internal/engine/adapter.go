@@ -15,8 +15,8 @@ import (
 	"golang.org/x/net/html"
 )
 
-const UpstreamCommit = "fa96d925c2e3db86859d04995b51cf7cda473d34"
-const Version = "0.1.0+stash.fa96d92"
+const UpstreamCommit = "4d6ab70ae453bf14f5f4ab103b829ec03b57d927"
+const Version = "0.1.0+stash.4d6ab70"
 
 var ErrInput = errors.New("invalid scraper input")
 

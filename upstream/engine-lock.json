@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/stashapp/stash",
-  "commit": "fa96d925c2e3db86859d04995b51cf7cda473d34",
+  "commit": "4d6ab70ae453bf14f5f4ab103b829ec03b57d927",
   "license": "AGPL-3.0",
   "files_sha256": {
     "definition.go": "eed3225c71ecfa92d69bffeabb4a881de625ecf9773421cb2e6d7b0963c21351",
